@@ -1,0 +1,7 @@
+*.meta
+*.csproj
+*.sln
+
+unity/elysianforest/Library
+unity/elysianforest/Logs
+unity/elysianforest/Temp
