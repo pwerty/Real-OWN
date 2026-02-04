@@ -1,7 +1,7 @@
 # Real OWN with Kubernetes : 유니티 원격 빌드 인프라 시스템
 * 어떤 유니티 프로젝트든 소스 주소만 넣으면 즉시 빌드 가능한 범용성
 * 로컬 PC의 환경에 의존하지 않는 표준화된 빌드 환경 제공
-
+* [별도 기록 블로그](https://hyeonistic.tistory.com/category/%EA%B5%AC%ED%98%84%ED%95%98%EA%B8%B0/Home%20Lab)
 
 ## 프로젝트 개요
 찍먹보다 더 딥다이브하고, 온전한 내 것을 만들기 위한 Lab
