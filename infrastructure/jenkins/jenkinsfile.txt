@@ -1,28 +1,80 @@
 pipeline {
     agent { label 'unity-builder' }
+    
     environment {
-        UNITY_LICENSE = credentials('UNITY_LICENSE')
+        HOME = "${WORKSPACE}"
+        PROJECT_PATH = 'unity/elysianforest'
     }
+
     stages {
-        stage('Git Clone') {
+        stage('Checkout') {
             steps {
-                git 'https://github.com/pwerty/Real-OWN.git'
+                git url: 'https://github.com/pwerty/Real-OWN.git', branch: 'main'
             }
         }
-        stage('Windows Build') {
+
+        stage('Unity Build') {
             steps {
-                container('unity-builder') {
-                    // 유니티 6 윈도우 빌드 실행, BuildScript.cs 포함해야함.
-                    sh "unity-editor -batchmode -nographics -projectPath . -executeMethod BuildScript.BuildWindows -quit -logfile /dev/stdout"
+                container('unity') {
+                    withCredentials([string(credentialsId: 'UNITY_LICENSE', variable: 'LICENSE_DATA')]) {
+                        sh """#!/bin/bash
+                        set -e
+
+                        # 1. 라이선스 파일을 base64에서 복원한다.
+                        echo "${LICENSE_DATA}" | base64 -d > unity_license.ulf
+
+                        # 2. 라이선스 활성화 (온라인 실패해도 ULF로 오프라인 인증 성공 할 수 있다)
+                        echo "--- Activating License ---"
+                        xvfb-run --auto-servernum --server-args='-screen 0 1024x768x24' \
+                        unity-editor \
+                            -batchmode \
+                            -nographics \
+                            -manualLicenseFile unity_license.ulf \
+                            -quit \
+                            -logFile /dev/stdout
+
+                        # 3. 패키지 부분에 수동 제거 해야 할 것을 여기서 한다.. 건들지 말것
+                        if [ -f "${PROJECT_PATH}/Packages/manifest.json" ]; then
+                            sed -i '/com.unity.test-framework/d' "${PROJECT_PATH}/Packages/manifest.json"
+                        fi
+
+                        # 4. 빌드 스크립트 생성 (Editor 폴더)
+                        mkdir -p "${PROJECT_PATH}/Assets/Editor"
+                        cat <<EOF > "${PROJECT_PATH}/Assets/Editor/BuildScript.cs"
+using UnityEditor;
+public class BuildScript {
+    public static void BuildLinuxServer() {
+        BuildPlayerOptions options = new BuildPlayerOptions();
+        options.scenes = new[] { "Assets/Scenes/SampleScene.unity" }; 
+        options.locationPathName = "Builds/Linux/ElysianForest.x86_64";
+        options.target = BuildTarget.StandaloneLinux64;
+        BuildPipeline.BuildPlayer(options);
+    }
+}
+EOF
+
+                        # 5. 실제 빌드 실행
+                        echo "--- Starting Actual Build ---"
+                        xvfb-run --auto-servernum --server-args='-screen 0 1024x768x24' \
+                        unity-editor \
+                            -batchmode \
+                            -nographics \
+                            -projectPath "${PROJECT_PATH}" \
+                            -executeMethod BuildScript.BuildLinuxServer \
+                            -quit \
+                            -logFile /dev/stdout
+
+                        # 마무리
+                        rm unity_license.ulf
+                        """
+                    }
                 }
             }
+                            post {
+        success {
+            archiveArtifacts artifacts: "${PROJECT_PATH}/Builds/Linux/**", fingerprint: true
         }
     }
-    post {
-        success {
-            // 빌드 성공 시 결과물(.exe)을 젠킨스 대시보드에서 다운로드 가능하게 보관
-            archiveArtifacts artifacts: 'Builds/Windows/**', fingerprint: true
-            echo "성공!"
         }
     }
 }
