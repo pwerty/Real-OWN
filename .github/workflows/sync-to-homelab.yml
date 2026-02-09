@@ -7,6 +7,8 @@ on:
     paths:
       - 'tools/**'
       - 'infrastructure/**'
+      - '.github/workflows/**'
+  workflow_dispatch:  # 수동 트리거 추가 (테스트용)
 
 jobs:
   sync:
