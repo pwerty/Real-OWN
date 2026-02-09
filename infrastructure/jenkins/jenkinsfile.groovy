@@ -13,7 +13,7 @@ spec:
     tty: true
     volumeMounts:
     - name: workspace-volume
-      mountPath: /home/jenkins/agent # 작업 공간 고정
+      mountPath: /home/jenkins/agent
   volumes:
   - name: workspace-volume
     persistentVolumeClaim:
