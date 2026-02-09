@@ -1,0 +1,24 @@
+name: Sync to Homelab
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'tools/**'
+      - 'infrastructure/**'
+
+jobs:
+  sync:
+    runs-on: self-hosted
+    
+    steps:
+      - name: 📥 Pull latest code to homelab
+        run: |
+          cd ~/Real-OWN
+          echo "🔄 Fetching latest changes from GitHub..."
+          git fetch origin main
+          git pull origin main
+          echo "✅ Code synced successfully at $(date)"
+          echo "📦 Updated files:"
+          git log -1 --stat
