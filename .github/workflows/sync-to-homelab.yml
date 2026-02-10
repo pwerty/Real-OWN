@@ -32,9 +32,5 @@ jobs:
           echo "📦 Updated files:"
           git log -1 --stat
       
-      - name: 🚀 Execute Post-Pull Tasks
-        run: |
-          echo "🔨 Running post-pull tasks directly..."
-          cd ~/Real-OWN/infrastructure/jenkins
-          chmod +x post-runner.sh
-          ./post-runner.sh
+      # post-runner.sh는 Jenkins Job에서 실행됩니다
+      # Pod가 /mnt/Real-OWN에 마운트된 저장소를 사용하도록 구성됨
