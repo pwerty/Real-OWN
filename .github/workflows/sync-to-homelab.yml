@@ -32,5 +32,28 @@ jobs:
           echo "📦 Updated files:"
           git log -1 --stat
       
-      # post-runner.sh는 Jenkins Job에서 실행됩니다
-      # Pod가 /mnt/Real-OWN에 마운트된 저장소를 사용하도록 구성됨
+      - name: 🚀 Trigger Jenkins Job
+        env:
+          JENKINS_URL: ${{ secrets.JENKINS_URL }}
+          JENKINS_USER: ${{ secrets.JENKINS_USER }}
+          JENKINS_TOKEN: ${{ secrets.JENKINS_TOKEN }}
+          JOB_NAME: "post-runner-after-pull"  # Jenkins Job 이름으로 변경 필요
+        run: |
+          echo "🔔 Triggering Jenkins Job: ${JOB_NAME}"
+          
+          CRUMB=$(curl -s -u "${JENKINS_USER}:${JENKINS_TOKEN}" \
+            "${JENKINS_URL}/crumbIssuer/api/json" | jq -r '.crumb')
+          
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            -u "${JENKINS_USER}:${JENKINS_TOKEN}" \
+            -H "Jenkins-Crumb: ${CRUMB}" \
+            "${JENKINS_URL}/job/${JOB_NAME}/build")
+          
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          
+          if [ "$HTTP_CODE" -eq 201 ]; then
+            echo "✅ Jenkins Job triggered successfully"
+          else
+            echo "⚠️  Jenkins trigger returned HTTP $HTTP_CODE"
+            echo "$RESPONSE"
+          fi
