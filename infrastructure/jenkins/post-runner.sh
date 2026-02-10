@@ -13,6 +13,7 @@ set -o pipefail
 # 색상 코드
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
+RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 echo "========================================"
@@ -21,8 +22,16 @@ echo "========================================"
 echo ""
 
 # Real-OWN 저장소 위치
-REPO_PATH="${HOME}/Real-OWN"
+# Kubernetes Pod에서는 /mnt/Real-OWN에 마운트됨
+REPO_PATH="${REPO_PATH:-/mnt/Real-OWN}"
 TOOLS_PATH="${REPO_PATH}/infrastructure/jenkins/tools"
+
+# 디렉토리 존재 확인
+if [ ! -d "${TOOLS_PATH}" ]; then
+    echo -e "${RED}❌ Error: Tools directory not found at ${TOOLS_PATH}${NC}"
+    echo "Repository path: ${REPO_PATH}"
+    exit 1
+fi
 
 cd "${TOOLS_PATH}"
 
