@@ -24,3 +24,24 @@ jobs:
           echo "✅ Code synced successfully at $(date)"
           echo "📦 Updated files:"
           git log -1 --stat
+      
+      - name: 🚀 Trigger Jenkins Job
+        env:
+          JENKINS_URL: ${{ secrets.JENKINS_URL }}
+          JENKINS_USER: ${{ secrets.JENKINS_USER }}
+          JENKINS_TOKEN: ${{ secrets.JENKINS_TOKEN }}
+        run: |
+          echo "🔔 Triggering Jenkins job: post-runner-after-pull"
+          
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            -u ${JENKINS_USER}:${JENKINS_TOKEN} \
+            "${JENKINS_URL}/job/post-runner-after-pull/build")
+          
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n 1)
+          
+          if [ "$HTTP_CODE" = "201" ] || [ "$HTTP_CODE" = "200" ]; then
+            echo "✅ Jenkins job triggered successfully (HTTP $HTTP_CODE)"
+          else
+            echo "⚠️  Jenkins trigger returned HTTP $HTTP_CODE"
+            echo "$RESPONSE"
+          fi

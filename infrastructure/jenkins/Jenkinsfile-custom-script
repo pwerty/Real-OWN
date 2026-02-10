@@ -1,0 +1,134 @@
+pipeline {
+    agent { 
+        label 'unity-builder'
+    }
+    
+    parameters {
+        // 스크립트 설정
+        string(
+            name: 'SCRIPT_NAME',
+            defaultValue: 'hello.sh',
+            description: 'infrastructure/jenkins/tools/ 내의 스크립트 파일명 (예: hello.sh, build.sh)'
+        )
+        
+        // 스크립트 인자 (선택)
+        string(
+            name: 'SCRIPT_ARGS',
+            defaultValue: '',
+            description: '스크립트에 전달할 인자 (선택사항)'
+        )
+        
+        // 로컬 저장소 경로
+        string(
+            name: 'LOCAL_REPO_PATH',
+            defaultValue: '/home/dabi/Real-OWN',
+            description: '홈랩의 Real-OWN 저장소 절대경로'
+        )
+    }
+    
+    environment {
+        HOME = "${WORKSPACE}"
+    }
+    
+    options {
+        skipDefaultCheckout()  // Git clone 스킵 (로컬 복사 사용)
+    }
+
+    stages {
+        stage('Sync from Local Repository') {
+            steps {
+                echo "================================================"
+                echo "📦 Syncing from local repository"
+                echo "Source: ${params.LOCAL_REPO_PATH}/infrastructure/jenkins"
+                echo "Target: ${WORKSPACE}"
+                echo "================================================"
+                
+                sh """#!/bin/bash
+                    set -e
+                    
+                    # 로컬 저장소 존재 확인
+                    if [ ! -d "${params.LOCAL_REPO_PATH}" ]; then
+                        echo "❌ ERROR: Local repository not found at ${params.LOCAL_REPO_PATH}"
+                        exit 1
+                    fi
+                    
+                    # WORKSPACE 정리
+                    rm -rf ${WORKSPACE}/*
+                    
+                    # 로컬에서 infrastructure/jenkins 전체 복사 (초고속)
+                    cp -r ${params.LOCAL_REPO_PATH}/infrastructure/jenkins/* ${WORKSPACE}/
+                    
+                    echo "✅ Files synced successfully"
+                    echo ""
+                    echo "📂 Workspace contents:"
+                    ls -lh ${WORKSPACE}
+                """
+            }
+        }
+
+        stage('Execute Script') {
+            steps {
+                script {
+                    def startTime = System.currentTimeMillis()
+
+                    echo "================================================"
+                    echo "🔨 Executing Custom Script"
+                    echo "Script: tools/${params.SCRIPT_NAME}"
+                    if (params.SCRIPT_ARGS) {
+                        echo "Arguments: ${params.SCRIPT_ARGS}"
+                    }
+                    echo "================================================"
+                    
+                    sh """#!/bin/bash
+                        set -e
+                        
+                        SCRIPT_PATH="tools/${params.SCRIPT_NAME}"
+                        
+                        # 스크립트 존재 여부 확인
+                        if [ ! -f "\${SCRIPT_PATH}" ]; then
+                            echo "❌ ERROR: Script not found at \${SCRIPT_PATH}"
+                            exit 1
+                        fi
+                        
+                        # 실행 권한 부여
+                        chmod +x "\${SCRIPT_PATH}"
+                        
+                        # 스크립트 실행
+                        echo "🚀 Running \${SCRIPT_PATH}..."
+                        if [ -n "${params.SCRIPT_ARGS}" ]; then
+                            "\${SCRIPT_PATH}" ${params.SCRIPT_ARGS}
+                        else
+                            "\${SCRIPT_PATH}"
+                        fi
+                    """
+
+                    def endTime = System.currentTimeMillis()
+                    def duration = (endTime - startTime) / 1000
+                    
+                    echo "================================================"
+                    echo "✅ SCRIPT COMPLETED"
+                    echo "⏱️  Total Duration: ${duration} seconds"
+                    echo "================================================"
+                }
+            }
+            
+            post {
+                success {
+                    echo "✅ Script executed successfully"
+                }
+                failure {
+                    echo "❌ Script execution failed. Check the logs above for details."
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            echo "================================================"
+            echo "🧹 Cleaning up workspace"
+            echo "================================================"
+            cleanWs()
+        }
+    }
+}
