@@ -104,11 +104,11 @@ pipeline {
                         RED='\\033[0;31m'
                         NC='\\033[0m'
                         
-                        # API 키 읽기
-                        API_KEY=\$(cat "${API_KEY_FILE}" | tr -d '[:space:]')
-                         (환경변수에서)
+                        # API 키 읽기 (환경변수에서)
                         API_KEY="\${CHATGPT_API_KEY}"
-                            echo -e "\${RED}❌ ERROR: API key file is empty\${NC}"
+                        
+                        if [ -z "\$API_KEY" ]; then
+                            echo -e "\${RED}❌ ERROR: API key is empty\${NC}"
                             exit 1
                         fi
                         
@@ -194,7 +194,7 @@ pipeline {
     post {
         always {
             echo "🧹 Cleaning up workspace"
-            cleanWs()
+            deleteDir()
         }
     }
 }
