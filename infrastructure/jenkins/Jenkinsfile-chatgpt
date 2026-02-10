@@ -26,7 +26,8 @@ pipeline {
     
     environment {
         HOME = "${WORKSPACE}"
-        API_KEY_FILE = "/home/dabi/.chatgpt_api_key"
+        // Kubernetes Secret에서 API 키 읽기
+        CHATGPT_API_KEY = credentials('chatgpt-api-key')
     }
     
     options {
@@ -35,6 +36,27 @@ pipeline {
     }
 
     stages {
+        stage('Debug Environment') {
+            steps {
+                echo "================================================"
+                echo "🔍 Environment Debug"
+                echo "================================================"
+                
+                sh """#!/bin/bash
+                    echo "Current User: \$(whoami)"
+                    echo "Home Directory: \$HOME"
+                    echo "Environment Type: Kubernetes Pod"
+                    echo ""
+                    if [ -n "\${CHATGPT_API_KEY}" ]; then
+                        echo "✅ API Key loaded from credentials"
+                    else
+                        echo "❌ API Key not found"
+                    fi
+                    ls -la /home/dabi/ || echo "Cannot access /home/dabi"
+                """
+            }
+        }
+        
         stage('Prepare') {
             steps {
                 echo "================================================"
@@ -47,12 +69,10 @@ pipeline {
                 sh """#!/bin/bash
                     set -e
                     
-                    # API 키 파일 존재 확인
-                    if [ ! -f "${API_KEY_FILE}" ]; then
-                        echo "❌ ERROR: API key file not found at ${API_KEY_FILE}"
-                        echo "Please create the file with your OpenAI API key:"
-                        echo "  echo 'your-api-key-here' > ${API_KEY_FILE}"
-                        echo "  chmod 600 ${API_KEY_FILE}"
+                    # API 키 존재 확인
+                    if [ -z "\${CHATGPT_API_KEY}" ]; then
+                        echo "❌ ERROR: API key not found in credentials"
+                        echo "Please create Jenkins credential with ID 'chatgpt-api-key'"
                         exit 1
                     fi
                     
@@ -85,8 +105,8 @@ pipeline {
                         
                         # API 키 읽기
                         API_KEY=\$(cat "${API_KEY_FILE}" | tr -d '[:space:]')
-                        
-                        if [ -z "\$API_KEY" ]; then
+                         (환경변수에서)
+                        API_KEY="\${CHATGPT_API_KEY}"
                             echo -e "\${RED}❌ ERROR: API key file is empty\${NC}"
                             exit 1
                         fi
