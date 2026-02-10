@@ -19,6 +19,13 @@ jobs:
         run: |
           cd ~/Real-OWN
           echo "🔄 Fetching latest changes from GitHub..."
+          
+          # 로컬 변경사항 확인 및 처리
+          if ! git diff-index --quiet HEAD --; then
+            echo "⚠️  Local changes detected. Stashing..."
+            git stash
+          fi
+          
           git fetch origin main
           git pull origin main
           echo "✅ Code synced successfully at $(date)"
