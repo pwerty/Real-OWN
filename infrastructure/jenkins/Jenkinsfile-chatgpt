@@ -1,7 +1,5 @@
 pipeline {
-    agent { 
-        label 'unity-builder'
-    }
+    agent any
     
     parameters {
         // ChatGPT 질문
