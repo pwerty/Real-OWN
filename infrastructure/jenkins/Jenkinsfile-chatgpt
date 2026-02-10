@@ -78,8 +78,20 @@ pipeline {
                     # jq 자동 설치 (Pod 환경)
                     if ! command -v jq &> /dev/null; then
                         echo "📦 Installing jq..."
-                        apt-get update -qq && apt-get install -y -qq jq > /dev/null 2>&1
-                        echo "✅ jq installed successfully"
+                        if apt-get update -qq 2>&1 && apt-get install -y -qq jq 2>&1; then
+                            echo "✅ jq installed successfully"
+                        else
+                            echo "⚠️  Failed to install jq, trying with curl..."
+                            # 바이너리 직접 다운로드
+                            curl -sL https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-amd64 -o /tmp/jq
+                            chmod +x /tmp/jq
+                            if /tmp/jq --version; then
+                                echo "✅ jq installed via curl"
+                            else
+                                echo "❌ ERROR: Failed to install jq"
+                                exit 1
+                            fi
+                        fi
                     else
                         echo "✅ jq already installed"
                     fi
@@ -96,6 +108,16 @@ pipeline {
                     
                     sh """#!/bin/bash
                         set -e
+                        
+                        # jq 명령어 설정 (/tmp에 있을 수 있음)
+                        if command -v jq &> /dev/null; then
+                            JQ_CMD="jq"
+                        elif [ -f "/tmp/jq" ]; then
+                            JQ_CMD="/tmp/jq"
+                        else
+                            echo "❌ ERROR: jq not found"
+                            exit 1
+                        fi
                         
                         # 색상 정의
                         GREEN='\\033[0;32m'
@@ -133,19 +155,19 @@ pipeline {
                           }")
                         
                         # 에러 체크
-                        if echo "\$RESPONSE" | jq -e '.error' > /dev/null 2>&1; then
-                            ERROR_MSG=\$(echo "\$RESPONSE" | jq -r '.error.message')
+                        if echo "\$RESPONSE" | \$JQ_CMD -e '.error' > /dev/null 2>&1; then
+                            ERROR_MSG=\$(echo "\$RESPONSE" | \$JQ_CMD -r '.error.message')
                             echo -e "\${RED}❌ API Error: \$ERROR_MSG\${NC}"
                             exit 1
                         fi
                         
                         # 답변 추출 및 출력
-                        ANSWER=\$(echo "\$RESPONSE" | jq -r '.choices[0].message.content')
+                        ANSWER=\$(echo "\$RESPONSE" | \$JQ_CMD -r '.choices[0].message.content')
                         
                         if [ -z "\$ANSWER" ] || [ "\$ANSWER" = "null" ]; then
                             echo -e "\${RED}❌ ERROR: Failed to get response from ChatGPT\${NC}"
                             echo -e "\${YELLOW}Raw Response:\${NC}"
-                            echo "\$RESPONSE" | jq '.'
+                            echo "\$RESPONSE" | \$JQ_CMD '.'
                             exit 1
                         fi
                         
@@ -158,9 +180,9 @@ pipeline {
                         echo -e "\${GREEN}════════════════════════════════════════════════════════════\${NC}"
                         
                         # 토큰 사용량 출력
-                        PROMPT_TOKENS=\$(echo "\$RESPONSE" | jq -r '.usage.prompt_tokens')
-                        COMPLETION_TOKENS=\$(echo "\$RESPONSE" | jq -r '.usage.completion_tokens')
-                        TOTAL_TOKENS=\$(echo "\$RESPONSE" | jq -r '.usage.total_tokens')
+                        PROMPT_TOKENS=\$(echo "\$RESPONSE" | \$JQ_CMD -r '.usage.prompt_tokens')
+                        COMPLETION_TOKENS=\$(echo "\$RESPONSE" | \$JQ_CMD -r '.usage.completion_tokens')
+                        TOTAL_TOKENS=\$(echo "\$RESPONSE" | \$JQ_CMD -r '.usage.total_tokens')
                         
                         echo ""
                         echo -e "\${BLUE}📊 Token Usage:\${NC}"
