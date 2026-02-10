@@ -39,7 +39,6 @@ cd "${TOOLS_PATH}"
 # 작업 1: Hello 스크립트 실행
 # ========================================
 echo -e "${GREEN}📋 Task 1: Running hello.sh${NC}"
-chmod +x hello.sh
 ./hello.sh
 echo ""
 
