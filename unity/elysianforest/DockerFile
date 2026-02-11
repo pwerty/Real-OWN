@@ -1,15 +1,22 @@
-# 유니티 리눅스 빌드 실행을 위한 최소 환경
 FROM ubuntu:22.04
 
-# 유니티 엔진 필수 라이브러리 (안 깔면 실행 시 에러 남)
+# [1] 유니티 6 리눅스 플레이어가 요구하는 최소 시스템 라이브러리 설치
 RUN apt-get update && apt-get install -y \
     libglu1-mesa libxcursor1 libxss1 libasound2 \
+    libxrender1 libxext6 libxi6 libfontconfig1 \
+    libxtst6 libpulse0 libwayland-client0 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-# 빌드 결과물을 컨테이너 안으로 복사
+
+# [2] 젠킨스가 빌드한 모든 파일을 복사
 COPY unity/elysianforest/Builds/Linux/ .
 
-# 실행 권한 부여 및 실행 (batchmode로 플레이어 실행)
+# [3] 실행 권한 부여
 RUN chmod +x ./ElysianForest.x86_64
-CMD ["./ElysianForest.x86_64", "-batchmode", "-nographics"]
+
+# [4] 핵심: 엔진(.so)이 현재 폴더(.)에 있다는 것을 리눅스에게 전달
+ENV LD_LIBRARY_PATH=/app:$LD_LIBRARY_PATH
+
+# [5] 실행 명령어 (ArgoCD 로그에서 확인 가능하도록 로그 출력 옵션 추가)
+ENTRYPOINT ["./ElysianForest.x86_64", "-batchmode", "-nographics", "-logFile", "/dev/stdout"]
