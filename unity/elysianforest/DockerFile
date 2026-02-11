@@ -1,0 +1,15 @@
+# 유니티 리눅스 빌드 실행을 위한 최소 환경
+FROM ubuntu:22.04
+
+# 유니티 엔진 필수 라이브러리 (안 깔면 실행 시 에러 남)
+RUN apt-get update && apt-get install -y \
+    libglu1-mesa libxcursor1 libxss1 libasound2 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+# 빌드 결과물을 컨테이너 안으로 복사
+COPY unity/elysianforest/Builds/Linux/ .
+
+# 실행 권한 부여 및 실행 (batchmode로 플레이어 실행)
+RUN chmod +x ./ElysianForest.x86_64
+CMD ["./ElysianForest.x86_64", "-batchmode", "-nographics"]
