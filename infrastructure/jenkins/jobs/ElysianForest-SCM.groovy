@@ -12,6 +12,7 @@ pipeline {
         HOME = "${WORKSPACE}"
         // 실제 유니티 프로젝트가 위치한 상대 경로
         PROJECT_PATH = 'unity/elysianforest'
+        DOCKER_IMAGE = "pwertyman/elysianforest"
     }
 
     stages {
@@ -33,6 +34,10 @@ stage('2. Unity Build') {
                         withCredentials([string(credentialsId: 'UNITY_LICENSE', variable: 'LICENSE_DATA')]) {
                             sh """#!/bin/bash
                             set -e
+
+                            echo "--- Cleaning up previous session locks ---"
+                            pkill -9 -f Unity || true
+                            rm -f "${PROJECT_PATH}/Temp/UnityLockfile"
                             
                             # [핵심] 인자값에 따라 Library 폴더 삭제 여부 결정
                             if [ "${params.CLEAN_LIBRARY}" == "true" ]; then
@@ -114,13 +119,14 @@ EOF
                     echo "-------------------------------------------------------"
                 }
             }
-            
             post {
                 success {
                     // [의도] 생성된 빌드 결과물을 Jenkins 서버로 보관 (추후 배포 단계에서 사용)
                     archiveArtifacts artifacts: "${PROJECT_PATH}/Builds/Linux/**", fingerprint: true
                 }
             }
-        }
+}
+
+        
     }
 }
