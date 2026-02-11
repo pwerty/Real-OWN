@@ -17,7 +17,6 @@ pipeline {
     stages {
 stage('1. Lightweight Checkout') {
             steps {
-                // [확장] PVC에 남은 데이터를 기반으로 변경된 페이지만 빠르게 가져옵니다.
                 checkout([$class: 'GitSCM', 
                     branches: [[name: 'main']],
                     extensions: [[$class: 'CloneOption', depth: 1, shallow: true]],
@@ -47,7 +46,7 @@ stage('2. Unity Build') {
                             # 1. 라이선스 복원 및 활성화
                             # [의도] 컨테이너는 휘발성이므로 실행 시마다 라이선스를 새로 주입해야 함
                             # -------------------------------------------------------
-                            echo "${LICENSE_DATA}" | base64 -d > unity_license.ulf
+                            echo "\$LICENSE_DATA" | base64 -d > unity_license.ulf
 
                             echo "--- Activating Unity License ---"
                             # xvfb-run: 가상 모니터를 생성하여 유니티가 그래픽 장치를 찾지 못해 죽는 현상 방지
