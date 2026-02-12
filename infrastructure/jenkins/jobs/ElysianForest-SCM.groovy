@@ -85,6 +85,7 @@ public class BuildScript {
         options.scenes = new[] { "Assets/Scenes/SampleScene.unity" }; 
         options.locationPathName = "Builds/Linux/ElysianForest.x86_64";
         options.target = BuildTarget.StandaloneLinux64;
+        options.subtarget = (int)StandaloneBuildSubtarget.Server;
         BuildPipeline.BuildPlayer(options);
     }
 }
@@ -126,7 +127,27 @@ EOF
                 }
             }
 }
-
-        
+stage('3. Docker Build & Push (Kaniko)') {
+    steps {
+        // [의도] 도커 엔진 없이 이미지를 빌드하고 푸시합니다.
+        container('kaniko') {
+sh """
+            # 1. 쓰기 가능한 임시 폴더 생성 및 열쇠 복사
+            mkdir -p /tmp/.docker
+            cp /kaniko/.docker/.dockerconfigjson /tmp/.docker/config.json
+            
+            # 2. Kaniko에게 열쇠 위치를 환경변수로 알려주기
+            export DOCKER_CONFIG=/tmp/.docker
+            
+            # 3. 빌드 실행
+            /kaniko/executor \
+                --context ${WORKSPACE} \
+                --dockerfile ${PROJECT_PATH}/DockerFile \
+                --destination ${DOCKER_IMAGE}:${env.BUILD_NUMBER} \
+                --destination ${DOCKER_IMAGE}:latest
+            """
+        }
+    }
+}
     }
 }
