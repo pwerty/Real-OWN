@@ -8,8 +8,33 @@
 
 
 ## 현재 진행
+### 완료된 기능
+* **기본 CI/CD 파이프라인 구현**
+  - Jenkins + Kubernetes 기반 빌드 환경 구축
+  - Unity CI/CD용 컨테이너 이미지 활용
+  
+* **고급 Unity 빌드 자동화**
+  - GitHub SCM 연동 (Shallow Clone)
+  - Unity 6 Linux Server 빌드 자동화
+  - 동적 빌드 스크립트 주입
+  - 파라미터화된 빌드 (클린 빌드 옵션)
+  - 빌드 시간 측정 및 아티팩트 보관
+
+* **Docker 이미지 자동화**
+  - Kaniko를 사용한 Docker 빌드/푸시 (Docker daemon 불필요)
+  - Docker Hub 자동 배포
+  - 버전 태깅 (BUILD_NUMBER, latest)
+
+* **Kubernetes 배포**
+  - ArgoCD 네임스페이스 배포 설정
+  - Deployment manifest 작성
+
+* **확장 기능**
+  - ChatGPT API 통합 파이프라인
+  - 커스텀 스크립트 실행 파이프라인
+
+### 진행 예정
 [마일스톤 목록은 별도 추가 예정]
-* 제일 기본적으로 작동하는 CI/CD 구현 완료
 
 ## 기술 스택
 * Kubernetes
