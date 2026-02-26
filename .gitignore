@@ -7,7 +7,7 @@ unity/elysianforest/Logs
 unity/elysianforest/Temp
 
 # terraform/.gitignore
-infrastructure/terraform/.gitignore
+infrastructure/terraform/.terraform
 .terraform.lock.hcl
 *.tfvars
 terraform.tfstate

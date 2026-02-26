@@ -27,6 +27,14 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
+      # JSON 키 대신 WIF를 통해 인증
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v2'
+        with:
+          workload_identity_provider: 'projects/984558148973/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
+          service_account: 'terraform-commander@project-fe6e3124-4492-4fae-92c.iam.gserviceaccount.com'
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
