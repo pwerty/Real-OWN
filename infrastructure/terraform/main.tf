@@ -7,9 +7,9 @@ module "network" {
 
 # 컴퓨트 모듈 인스턴스화 및 변수 전달
 module "compute" {
-  source       = "./modules/compute"
-  
-  github_token = var.github_token  
+  source = "./modules/compute"
+
+  github_token = var.github_token
 }
 
 moved {

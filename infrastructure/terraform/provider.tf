@@ -9,7 +9,7 @@ terraform {
 
   backend "gcs" {
     bucket = "tf-state-sample"
-    prefix ="terraform/state"
+    prefix = "terraform/state"
   }
 
 }
