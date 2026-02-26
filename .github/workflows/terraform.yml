@@ -10,6 +10,10 @@ on:
     paths:
       - 'infrastructure/terraform/**' # 💡 경로 수정됨
 
+permissions:
+  contents: 'read'
+  id-token: 'write'
+
 jobs:
   terraform:
     name: "Terraform Pipeline"
@@ -17,7 +21,7 @@ jobs:
     
     defaults:
       run:
-        working-directory: ./infrastructure/terraform # 💡 모든 명령어는 여기서 실행됨
+        working-directory: ./infrastructure/terraform # 모든 명령어는 여기서 실행됨
 
     env:
       GOOGLE_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
