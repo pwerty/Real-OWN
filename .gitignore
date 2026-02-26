@@ -5,3 +5,10 @@
 unity/elysianforest/Library
 unity/elysianforest/Logs
 unity/elysianforest/Temp
+
+# terraform/.gitignore
+infrastructure/terraform/.terraform
+.terraform.lock.hcl
+*.tfvars
+terraform.tfstate
+terraform.tfstate.backup
