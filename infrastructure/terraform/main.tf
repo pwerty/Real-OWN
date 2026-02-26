@@ -21,3 +21,7 @@ moved {
   from = google_compute_instance.free_tier_vm
   to   = module.compute.google_compute_instance.free_tier_vm
 }
+
+output "vm_ip" {
+  value = google_compute_instance.free_tier_vm.network_interface[0].access_config[0].nat_ip
+}
